@@ -11,11 +11,17 @@ function handshakeIp(socket) {
 }
 
 function registerOrcaWeb(app, io) {
+  // IP 에코 — host가 자기 자신을 doil.me 도메인으로(루프백 아님) 찔러 hairpin NAT으로 관측되는
+  // 외부 IP를 얻는 데 씀(lib/ipGate.js). 인증 불필요 — ifconfig.me류와 동일하게 호출자 IP만 반환.
+  app.get('/orca/whoami', (req, res) => res.type('text/plain').send(clientIp(req)));
+
   const nsp = io.of('/orca');
 
   // 게이트 2 (먼저) — VPN 서브넷 IP 체크
-  nsp.use((s, next) => {
-    if (allowedIp(handshakeIp(s))) return next();
+  nsp.use(async (s, next) => {
+    try {
+      if (await allowedIp(handshakeIp(s))) return next();
+    } catch { /* fall through to reject */ }
     next(new Error('forbidden: VPN 네트워크에서만 접근 가능합니다'));
   });
   // 게이트 1 — root 관리자 토큰
