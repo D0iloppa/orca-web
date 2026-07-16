@@ -10,12 +10,16 @@ function handshakeIp(socket) {
   return clientIp({ headers: socket.handshake.headers, ip: socket.handshake.address });
 }
 
-function registerOrcaWeb(app, io) {
-  // IP 에코 — host가 자기 자신을 doil.me 도메인으로(루프백 아님) 찔러 hairpin NAT으로 관측되는
-  // 외부 IP를 얻는 데 씀(lib/ipGate.js). 인증 불필요 — ifconfig.me류와 동일하게 호출자 IP만 반환.
-  // /api/ prefix만 nginx가 doil-sb로 프록시하므로 그 아래에 둔다(/orca/*는 라우팅 안 됨).
+// IP 에코 — host가 자기 자신을 doil.me 도메인으로(루프백 아님) 찔러 hairpin NAT으로 관측되는
+// 외부 IP를 얻는 데 씀(lib/ipGate.js). 인증 불필요 — ifconfig.me류와 동일하게 호출자 IP만 반환.
+// app.js에서 pagesRouter(전역 requireContext 미들웨어) 마운트보다 먼저 호출해야 한다 —
+// pagesRouter가 '/'에 물려 경로 매칭 없이 먼저 걸리므로, registerOrcaWeb(뒤늦게 io와 함께
+// 호출됨)에 같이 넣으면 도달 자체가 안 됨(실측 확인, 403 Direct access not allowed).
+function registerOrcaWhoami(app) {
   app.get('/api/orca/whoami', (req, res) => res.type('text/plain').send(clientIp(req)));
+}
 
+function registerOrcaWeb(app, io) {
   const nsp = io.of('/orca');
 
   // 게이트 2 (먼저) — VPN 서브넷 IP 체크
@@ -84,4 +88,4 @@ function registerOrcaWeb(app, io) {
   console.log('🐋 orca-web registered — socket.io namespace /orca (게이트: IP → root)');
 }
 
-module.exports = { registerOrcaWeb };
+module.exports = { registerOrcaWeb, registerOrcaWhoami };
