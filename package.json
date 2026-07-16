@@ -1,0 +1,11 @@
+{
+  "name": "orca-web",
+  "version": "0.1.0",
+  "description": "Orca 데스크톱 원격 접속 웹 클라이언트 — doil-sb 마운트 서브모듈 (registerOrcaWeb)",
+  "main": "index.js",
+  "license": "ISC",
+  "peerDependencies": {
+    "tweetnacl": "^1.0.3",
+    "ws": "^8.0.0"
+  }
+}
