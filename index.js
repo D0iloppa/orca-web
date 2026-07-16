@@ -15,9 +15,11 @@ function registerOrcaWeb(app, io) {
 
   // 게이트 2 (먼저) — VPN 서브넷 IP 체크
   nsp.use(async (s, next) => {
-    try {
-      if (await allowedIp(handshakeIp(s))) return next();
-    } catch { /* fall through to reject */ }
+    const ip = handshakeIp(s);
+    let ok = false;
+    try { ok = await allowedIp(ip); } catch (e) { console.warn('[orca gate2] allowedIp 예외:', e.message); }
+    console.log(`[orca gate2] client=${ip} → ${ok ? 'ALLOW' : 'DENY'}`);
+    if (ok) return next();
     next(new Error('forbidden: VPN 네트워크에서만 접근 가능합니다'));
   });
   // 게이트 1 — root 관리자 토큰
