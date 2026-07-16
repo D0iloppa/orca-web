@@ -13,7 +13,8 @@ function handshakeIp(socket) {
 function registerOrcaWeb(app, io) {
   // IP 에코 — host가 자기 자신을 doil.me 도메인으로(루프백 아님) 찔러 hairpin NAT으로 관측되는
   // 외부 IP를 얻는 데 씀(lib/ipGate.js). 인증 불필요 — ifconfig.me류와 동일하게 호출자 IP만 반환.
-  app.get('/orca/whoami', (req, res) => res.type('text/plain').send(clientIp(req)));
+  // /api/ prefix만 nginx가 doil-sb로 프록시하므로 그 아래에 둔다(/orca/*는 라우팅 안 됨).
+  app.get('/api/orca/whoami', (req, res) => res.type('text/plain').send(clientIp(req)));
 
   const nsp = io.of('/orca');
 
